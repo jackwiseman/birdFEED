@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/dchest/uniuri"
 	"github.com/hybridgroup/mjpeg"
 	"gocv.io/x/gocv"
 )
@@ -94,7 +93,7 @@ func mjpegCapture(stream *mjpeg.Stream) {
 
 	status := "Ready"
 
-	notified := false
+	// notified := false
 
 	fmt.Printf("Start reading device: %v\n", deviceID)
 	for {
@@ -134,11 +133,11 @@ func mjpegCapture(stream *mjpeg.Stream) {
 			}
 
 			// only want to trigger a motion detection event the FIRST time
-			if !notified {
-				gocv.IMWrite(fmt.Sprintf("./pics/%s.png", uniuri.New()), img)
-				fmt.Println("bird spotted")
-				notified = true
-			}
+			// if !notified {
+			// 	gocv.IMWrite(fmt.Sprintf("./pics/%s.png", uniuri.New()), img)
+			// 	fmt.Println("bird spotted")
+			// 	notified = true
+			// }
 
 			status = "Bird detected!"
 			statusColor = color.RGBA{255, 0, 0, 0}
@@ -150,9 +149,9 @@ func mjpegCapture(stream *mjpeg.Stream) {
 
 		contours.Close()
 
-		if status == "Ready" {
-			notified = false
-		}
+		// if status == "Ready" {
+		// 	notified = false
+		// }
 
 		gocv.PutText(&img, status, image.Pt(10, 20), gocv.FontHersheyPlain, 1.2, statusColor, 2)
 
