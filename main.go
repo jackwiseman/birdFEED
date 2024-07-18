@@ -1,25 +1,15 @@
-// What it does:
-//
-// This example detects motion using a delta threshold from the first frame,
-// and then finds contours to determine where the object is located.
-//
-// Very loosely based on Adrian Rosebrock code located at:
-// http://www.pyimagesearch.com/2015/06/01/home-surveillance-and-motion-detection-with-the-raspberry-pi-python-and-opencv/
-//
-// How to run:
-//
-// 		go run ./cmd/motion-detect/main.go 0
-//
-
-package birdFEED
+package main
 
 import (
 	"fmt"
 	"image"
 	"image/color"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/dchest/uniuri"
+	"github.com/hybridgroup/mjpeg"
 	"gocv.io/x/gocv"
 )
 
@@ -32,7 +22,32 @@ func main() {
 	}
 
 	// parse args
-	deviceID := os.Args[1]
+	// deviceID := os.Args[1]
+
+	stream := mjpeg.NewStream()
+
+	// start capturing
+	go mjpegCapture(stream)
+
+	// fmt.Println("Capturing. Point your browser to " + host)
+
+	// start http server
+	http.Handle("/", stream)
+
+	server := &http.Server{
+		Addr:         ":8080",
+		ReadTimeout:  60 * time.Second,
+		WriteTimeout: 60 * time.Second,
+	}
+
+	err := server.ListenAndServe()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func mjpegCapture(stream *mjpeg.Stream) {
+	deviceID := 1
 
 	webcam, err := gocv.OpenVideoCapture(deviceID)
 	if err != nil {
@@ -41,8 +56,8 @@ func main() {
 	}
 	defer webcam.Close()
 
-	window := gocv.NewWindow("Motion Window")
-	defer window.Close()
+	// window := gocv.NewWindow("Motion Window")
+	// defer window.Close()
 
 	img := gocv.NewMat()
 	defer img.Close()
@@ -120,9 +135,14 @@ func main() {
 
 		gocv.PutText(&img, status, image.Pt(10, 20), gocv.FontHersheyPlain, 1.2, statusColor, 2)
 
-		window.IMShow(img)
-		if window.WaitKey(1) == 27 {
-			break
-		}
+		// needed for stream
+		buf, _ := gocv.IMEncode(".jpg", img)
+		stream.UpdateJPEG(buf.GetBytes())
+		buf.Close()
+
+		// window.IMShow(img)
+		// if window.WaitKey(1) == 27 {
+		// 	break
+		// }
 	}
 }
