@@ -6,7 +6,6 @@ import (
 	"image/color"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/dchest/uniuri"
 	"github.com/hybridgroup/mjpeg"
@@ -29,20 +28,18 @@ func main() {
 	// start capturing
 	go mjpegCapture(stream)
 
-	// fmt.Println("Capturing. Point your browser to " + host)
-
 	// start http server
-	http.Handle("/", stream)
+	mux := http.NewServeMux()
 
-	server := &http.Server{
-		Addr:         ":8080",
-		ReadTimeout:  60 * time.Second,
-		WriteTimeout: 60 * time.Second,
-	}
+	mux.Handle("/stream", stream)
+	// mux.HandleFunc("/pics", picsHandler)
 
-	err := server.ListenAndServe()
-	if err != nil {
-		panic(err)
+	fileServer := http.FileServer(http.Dir("./pics"))
+	mux.Handle("/pics/", http.StripPrefix("/pics/", fileServer))
+
+	fmt.Println("Starting server on :8080")
+	if err := http.ListenAndServe(":8080", mux); err != nil {
+		fmt.Printf("Server error: %s", err)
 	}
 }
 
@@ -139,10 +136,5 @@ func mjpegCapture(stream *mjpeg.Stream) {
 		buf, _ := gocv.IMEncode(".jpg", img)
 		stream.UpdateJPEG(buf.GetBytes())
 		buf.Close()
-
-		// window.IMShow(img)
-		// if window.WaitKey(1) == 27 {
-		// 	break
-		// }
 	}
 }
