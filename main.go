@@ -37,6 +37,10 @@ func main() {
 	fileServer := http.FileServer(http.Dir("./pics"))
 	mux.Handle("/pics/", http.StripPrefix("/pics/", fileServer))
 
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "index.html")
+	})
+
 	fmt.Println("Starting server on :8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		fmt.Printf("Server error: %s", err)
