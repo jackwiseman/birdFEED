@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"image"
 	"image/color"
@@ -15,14 +16,6 @@ import (
 const MinimumArea = 3000
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("How to run:\n\tmotion-detect [camera ID]")
-		return
-	}
-
-	// parse args
-	// deviceID := os.Args[1]
-
 	stream := mjpeg.NewStream()
 
 	// start capturing
@@ -36,6 +29,7 @@ func main() {
 
 	fileServer := http.FileServer(http.Dir("./pics"))
 	mux.Handle("/pics/", http.StripPrefix("/pics/", fileServer))
+	mux.HandleFunc("/imagedata/", handleImageData)
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "index.html")
@@ -47,8 +41,34 @@ func main() {
 	}
 }
 
+func handleImageData(w http.ResponseWriter, r *http.Request) {
+	type ImageData struct {
+		Images []string `json:"images"`
+	}
+
+	// get the list of files in the ./pics directory
+	files, _ := os.ReadDir("./pics")
+
+	// create a slice to store the names of the images
+	var imageNames []string
+
+	// loop through each file and append its name to the slice
+	for _, f := range files {
+		imageNames = append(imageNames, f.Name())
+	}
+
+	// marshal the slice of image names into JSON
+	jsonData, _ := json.Marshal(imageNames)
+
+	// write the JSON response to the client
+	// TODO: obviously remove this
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Write(jsonData)
+
+}
+
 func mjpegCapture(stream *mjpeg.Stream) {
-	deviceID := 1
+	deviceID := 0
 
 	webcam, err := gocv.OpenVideoCapture(deviceID)
 	if err != nil {

@@ -1,6 +1,56 @@
+<!DOCTYPE html>
 <html>
-	<head></head>
-	<body>
-		<img style="display: block;-webkit-user-select: none;margin: auto;background-color: hsl(0, 0%, 25%);" src="http://localhost:8080/stream" width="1492" height="839">
-	</body>
+  <head>
+    <title>Video Stream and Picture List</title>
+    <style>
+	#video-stream > img {
+	  width: 80%;
+	}
+
+	#picture-list {
+	  width: 100%;
+	  max-height: 500px;
+	  overflow-y: scroll;
+	}
+
+	#scroll-container {
+	  background-color: #333;
+	  overflow: auto;
+	  white-space: nowrap;
+	  padding: 10px;
+	}
+
+	#scroll-container > img {
+	  width: 10rem;
+	  margin-right: 10px; /* offsets the padding from the scroll-container /*
+	}
+    </style>
+  </head>
+  <body>
+    <div id="video-stream">
+      <img style="display: block;-webkit-user-select: none;margin: auto;" src="http://localhost:8080/stream"></img>
+    </div>
+    <div id="scroll-container">
+      <div>
+
+      </div>
+      <script>
+	// Fetch the list of pictures from the API
+	fetch('http://localhost:8080/imagedata/')
+	  .then(response => response.json())
+	  .then(data => {
+	    const pictureList = document.getElementById('scroll-container');
+	    // TODO: should lazy load; there's a LOT of pictures
+	    for (let i = 0; i < 5; i++) {
+	      // Create a new li element for each picture
+	      const img = document.createElement('img');
+	      console.log(data[i])
+
+	      img.src = `http://localhost:8080/pics/${data[i]}`;
+	      pictureList.appendChild(img);
+	    }
+	  })
+	  .catch(error => console.error('Error fetching picture list:', error));
+      </script>
+  </body>
 </html>
