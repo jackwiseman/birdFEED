@@ -1,6 +1,6 @@
 module birdFEED
 
-go 1.22.4
+go 1.22.3
 
 require gocv.io/x/gocv v0.37.0
 
